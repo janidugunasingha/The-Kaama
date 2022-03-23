@@ -59,6 +59,7 @@
 
     <div class="footer-img">
         <img src="images/footer.png"/>
+        Thank you
     </div>
 
 </div>
