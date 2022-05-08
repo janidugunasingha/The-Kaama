@@ -1,62 +1,72 @@
+<?php
+require('./fpdf184/fpdf.php');
+$db = new PDO('mysql:host=localhost;dbname=itpm_restaurant','root','');
 
-<html>
- <head>
-  <title>payment details</title>
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
-  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/r/dt/jq-2.1.4,jszip-2.5.0,pdfmake-0.1.18,dt-1.10.9,af-2.0.0,b-1.0.3,b-colvis-1.0.3,b-html5-1.0.3,b-print-1.0.3,se-1.0.1/datatables.min.css"/>
-  <script type="text/javascript" src="https://cdn.datatables.net/r/dt/jq-2.1.4,jszip-2.5.0,pdfmake-0.1.18,dt-1.10.9,af-2.0.0,b-1.0.3,b-colvis-1.0.3,b-html5-1.0.3,b-print-1.0.3,se-1.0.1/datatables.min.js"></script>
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" />
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
-</head>
- <body>
-  <div class="container box">
-   <h3 align="center">Payment Report Managment</h3>
-   <br />
-   <div>
-   <a href="display.php"  class="btn btn-primary btn-sm">Home page</a><br/><br/>
-   </div>
-   <div class="table-responsive">
-    <table id="customer_data" class="table table-success table-striped">
-     <thead>
-      <tr>
-                <th>id</th>
-                <th>Full Name</th>
-                <th>Email</th>
-                <th>Address</th>
-                <th>NIC</th>
-                <th>ZIP</th>
-                <th>CONTACT</th>
-              
-      </tr>
-     </thead>
-    </table>
-   </div>
-  </div>
-  <br />
-  <br />
- </body>
-</html>
+class mypdf extends FPDF
+{
+	
+	function header()
+	{
+		$db = new PDO('mysql:host=localhost;dbname=itpm_restaurant','root','');
+		$this->setfont('arial', 'B', 13);
+		$this->cell(180,4,'User List',0,1,'L');
+		$this->Ln();
+		
+	}
+	function footer()
+	{
+		$this-> setY(-15);
+		$this->setfont('arial', '', 8);
+		$this->cell(0,10,'page' .$this->PageNo().'/{nb}',0,0,'c');
+	}
+	function headerTable(){
+         $this->setfont('Times', 'B', 10);
+         $this->cell(10,10,'ID',1,0,'C');
+         $this->cell(30,10,'FIRST NAME',1,0,'C');
+         $this->cell(30,10,'LAST NAME',1,0,'C');
+         $this->cell(40,10,'EMAIL'	,1,0,'C');
+         $this->cell(20,10,'GENDER'	,1,0,'C');
+         $this->cell(40,10,'IMAGE'	,1,0,'C');
+         $this->cell(20,10,'USER TYPE'	,1,0,'C');
+         
 
-<script type="text/javascript" language="javascript" >
- $(document).ready(function(){
+	}
+	function viewTable($db)
+	{
 
-  $('#customer_data').DataTable({
-   "processing" : true,
-   "serverSide" : true,
-   "ajax" : {
-    url:"report_fetch.php",
-    type:"POST"
-   },
-   dom: 'lBfrtip',
-   buttons: [
-    'excel', 'csv'
-   ],
-   "lengthMenu": [ [10, 25, 50, -1], [10, 25, 50, "All"] ]
-  });
-  
- });
- 
+		$stmt=$db->query('SELECT * From users WHERE id!= '.$_GET['userId'].' ORDER BY id DESC');
+		
+        $a =15;
+        $b = 30;
+
+		while ($data =$stmt->fetch(PDO :: FETCH_OBJ)) {
+			
+			$this->Ln();
+            
+			$this->cell(10,20,$data->id,1,0,'C');
+            $this->cell(30,20, $data->fname,1,0,'C');
+         	$this->cell(30,20,$data->lname,1,0,'C');
+         	$this->cell(40,20,$data->email,1,0,'L');
+         	$this->cell(20,20,$data->gender,1,0,'C');
+         	$this->cell(40,20,$this->Image('./db/'.$data->image ,150,$b,$a),1,0,'C');
+         	$this->cell(20,20,$data->userType,1,0,'C');
+
+            $b = $b+ 20;
+			
+			
+		 
+		}
+			
+	 }
+}
 
 
-</script>
+$pdf = new mypdf();
+
+$pdf->AddPage();
+$pdf->headerTable();
+$pdf->viewTable($db);
+$pdf->Ln();
+$pdf->output();
+
+?>
